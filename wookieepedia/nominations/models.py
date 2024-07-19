@@ -2,13 +2,28 @@ from django.contrib import admin
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.db.models.functions import Lower
+from django.utils import timezone
+from django.utils.html import format_html
 
 
 class Project(models.Model):
+    class Type(models.IntegerChoices):
+        CATEGORY = 1
+        INTELLECTUAL_PROPERTY = 2
+
     name = models.CharField(max_length=200, unique=True, help_text='Must be unique.')
+    type = models.IntegerField(choices=Type, default=Type.CATEGORY, help_text='If Intellectual Property is chosen, '
+                                                                              'the name will render in italics.')
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
+        if self.type == Project.Type.INTELLECTUAL_PROPERTY:
+            return format_html('<em>{}</em>', self.name)
         return self.name
+
+    @admin.display
+    def styled_name(self):
+        return self.__str__()
 
     class Meta:
         constraints = [
@@ -20,20 +35,10 @@ class Project(models.Model):
         ]
 
 
-class NominatorRight(models.Model):
-    name = models.CharField(max_length=200, unique=True, help_text='Must be unique.')
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        constraints = [
-            UniqueConstraint(
-                Lower('name'),
-                name='nominator_right_lower_name_unique',
-                violation_error_message='Nominator Right already exists (case insensitive)'
-            )
-        ]
+class ProjectAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+    list_display = ('styled_name', 'type', 'created_at')
+    list_filter = ('type', 'created_at')
 
 
 class Nominator(models.Model):
@@ -52,9 +57,19 @@ class Nominator(models.Model):
         ]
 
 
+class NominatorAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
+
 class NominatorRightTimeframe(models.Model):
+    class Right(models.IntegerChoices):
+        AGRI_CORP = 1
+        EDU_CORP = 2
+        INQUISITOR = 3
+        BANNED = 4
+
     nominator = models.ForeignKey(Nominator, on_delete=models.RESTRICT)
-    right = models.ForeignKey(NominatorRight, on_delete=models.RESTRICT)
+    right = models.IntegerField(choices=Right)
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField(null=True, blank=True)
 
@@ -66,6 +81,7 @@ class Continuity(models.Model):
         return self.name
 
     class Meta:
+        verbose_name_plural = 'continuities'
         constraints = [
             UniqueConstraint(
                 Lower('name'),
@@ -114,5 +130,5 @@ class Nomination(models.Model):
 
 class NominationAdmin(admin.ModelAdmin):
     search_fields = ['article_name']
-    list_display = ('article_name', 'category', 'outcome')
-    list_filter = ('category', 'outcome', 'projects', 'nominators')
+    list_display = ('article_name', 'category', 'outcome', 'started_at', 'ended_at')
+    list_filter = ('category', 'outcome', 'projects', 'nominators', 'started_at')
