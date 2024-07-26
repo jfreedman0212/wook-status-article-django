@@ -13,8 +13,11 @@ To get started, you'll need to install:
 - Python 3
 - Pip
 - Pipenv
+  - Look for pipenv in your package manager or run `brew install pipenv` on Mac.
 - SQLite (optional, only necessary for development builds; also it's most likely installed already)
 - Docker (optional, only necessary for running Postgres locally)
+- Postgres Client Libraries
+  - Look for `libpq-dev` as a package in your package manager on Linux, or run `brew install postgres` on Mac.
 
 Once you have all of those installed, create a copy of the `.env.example` file and name it `.env`. If you just want
 to test it out, that should be all you need to do. However, you will need to change `DATABASE_URL` to a Postgres
