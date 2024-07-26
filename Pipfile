@@ -7,6 +7,8 @@ name = "pypi"
 django = "*"
 django-environ = "*"
 daphne = "*"
+psycopg2 = "*"
+whitenoise = "*"
 
 [dev-packages]
 
